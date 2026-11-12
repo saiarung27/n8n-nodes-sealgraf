@@ -456,7 +456,7 @@ export class Sealgraf implements INodeType {
 					...(request.qs !== undefined ? { qs: request.qs as IDataObject } : {}),
 					headers: {
 						'Content-Type': 'application/json',
-						'User-Agent': 'n8n-nodes-sealgraf/0.1.0',
+						'User-Agent': 'n8n-nodes-sealgraf/0.1.2',
 					},
 					timeout: 20000,
 					returnFullResponse: true,
@@ -464,21 +464,20 @@ export class Sealgraf implements INodeType {
 				})) as { statusCode: number; body: unknown };
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
+				// The transport throws n8n-native errors directly (n8n's
+				// verification rules require NodeApiError/NodeOperationError
+				// from node code). The shared client passes n8n-native
+				// errors through unchanged, so the fail-closed message —
+				// and the behavior — is identical to the reference client.
 				if (/timed out|timeout|etimedout/i.test(message)) {
-					// The transport must throw the shared client's domain
-					// error so its fail-closed handling stays identical to
-					// the reference client; execute() converts every
-					// SealgrafError into a NodeOperationError before it can
-					// escape the node, which the static rule cannot see.
-					// eslint-disable-next-line @n8n/community-nodes/require-node-api-error, n8n-nodes-base/node-execute-block-wrong-error-thrown
-					throw new SealgrafError(
+					throw new NodeOperationError(
+						this.getNode(),
 						`Sealgraf request timed out (${request.method} ${request.path}). ` +
 							'Failing closed: no permission was granted.',
 					);
 				}
-				// Same transport exception as the timeout throw above.
-				// eslint-disable-next-line @n8n/community-nodes/require-node-api-error, n8n-nodes-base/node-execute-block-wrong-error-thrown
-				throw new SealgrafError(
+				throw new NodeOperationError(
+					this.getNode(),
 					`Sealgraf request failed (${request.method} ${request.path}): ${message}. ` +
 						'Failing closed: no permission was granted.',
 				);

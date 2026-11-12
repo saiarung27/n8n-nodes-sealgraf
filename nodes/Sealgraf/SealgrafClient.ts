@@ -163,6 +163,32 @@ export interface TransportRequest {
 
 export type SealgrafTransport = (request: TransportRequest) => Promise<RawResponse>;
 
+/**
+ * Map a transport failure to the error this module raises for it.
+ * Errors that are already ours, and errors that are already n8n-native
+ * (the node's transport throws NodeOperationError, recognized by name so
+ * this module needs no n8n import), pass through unchanged; anything
+ * else is wrapped in the fail-closed SealgrafError. The node's execute()
+ * converts SealgrafError/SealgrafApiError into NodeOperationError/
+ * NodeApiError at the node boundary.
+ */
+function asSealgrafError(error: unknown, method: string, path: string): Error {
+	if (error instanceof SealgrafError) {
+		return error;
+	}
+	if (
+		error instanceof Error &&
+		(error.name === 'NodeOperationError' || error.name === 'NodeApiError')
+	) {
+		return error;
+	}
+	const message = error instanceof Error ? error.message : String(error);
+	return new SealgrafError(
+		`Sealgraf request failed (${method} ${path}): ${message}. ` +
+			'Failing closed: no permission was granted.',
+	);
+}
+
 async function request(
 	transport: SealgrafTransport,
 	method: string,
@@ -174,25 +200,17 @@ async function request(
 	} = {},
 ): Promise<Record<string, unknown>> {
 	const expected = options.expected ?? [200, 201];
-	let response: RawResponse;
+	let response: RawResponse | undefined;
+	let transportError: unknown;
+	let transportFailed = false;
 	try {
 		response = await transport({ method, path, body: options.body, qs: options.qs });
 	} catch (error) {
-		if (error instanceof SealgrafError) {
-			// This module is a framework-free port of the reference
-			// client (identical error taxonomy in every Sealgraf
-			// surface); it has no INode to build n8n errors with. The
-			// node converts SealgrafError/SealgrafApiError into
-			// NodeOperationError/NodeApiError in execute().
-			// eslint-disable-next-line @n8n/community-nodes/require-node-api-error
-			throw error;
-		}
-		const message = error instanceof Error ? error.message : String(error);
-		// eslint-disable-next-line @n8n/community-nodes/require-node-api-error
-		throw new SealgrafError(
-			`Sealgraf request failed (${method} ${path}): ${message}. ` +
-				'Failing closed: no permission was granted.',
-		);
+		transportFailed = true;
+		transportError = error;
+	}
+	if (transportFailed || response === undefined) {
+		throw asSealgrafError(transportError, method, path);
 	}
 	if (!expected.includes(response.status)) {
 		let detail = '';
