@@ -1,0 +1,74 @@
+
+> n8n-nodes-sealgraf@0.1.0 test
+> npm run build && node --test tests/sealgraf.test.js
+
+
+> n8n-nodes-sealgraf@0.1.0 build
+> n8n-node build
+
+┌   n8n-node build  v0.56.2
+[?25l│
+◒  Building TypeScript files[999D[J◐  Building TypeScript files[999D[J◓  Building TypeScript files[999D[J◑  Building TypeScript files[999D[J◒  Building TypeScript files[999D[J◐  Building TypeScript files[999D[J◓  Building TypeScript files[999D[J◑  Building TypeScript files[999D[J◒  Building TypeScript files.[999D[J◐  Building TypeScript files.[999D[J◓  Building TypeScript files.[999D[J◑  Building TypeScript files.[999D[J◒  Building TypeScript files.[999D[J◐  Building TypeScript files.[999D[J◓  Building TypeScript files.[999D[J◑  Building TypeScript files.[999D[J◒  Building TypeScript files..[999D[J◐  Building TypeScript files..[999D[J◓  Building TypeScript files..[999D[J◑  Building TypeScript files..[999D[J◒  Building TypeScript files..[999D[J◐  Building TypeScript files..[999D[J◓  Building TypeScript files..[999D[J◑  Building TypeScript files..[999D[J◒  Building TypeScript files...[999D[J◐  Building TypeScript files...[999D[J◓  Building TypeScript files...[999D[J◑  Building TypeScript files...[999D[J◒  Building TypeScript files...[999D[J◐  Building TypeScript files...[999D[J◓  Building TypeScript files...[999D[J◑  Building TypeScript files...[999D[J◒  Building TypeScript files...[999D[J◐  Building TypeScript files[999D[J◓  Building TypeScript files[999D[J◇  TypeScript build successful
+[?25h[?25l│
+◇  Copied static files
+[?25h│
+└  ✓ Build successful
+
+▶ node description
+  ✔ exposes one Sealgraf node with the sealgrafApi credential (2.894934ms)
+  ✔ offers exactly the canonical 14 categories, in canonical order (0.568263ms)
+✔ node description (5.433354ms)
+▶ credentials type
+  ✔ sends the key as X-API-Key via generic authenticate (0.600811ms)
+  ✔ defaults the base URL to https://sealgraf.com and masks the key (0.260341ms)
+  ✔ tests credentials with GET /v1/receipts?limit=1 (not the admin-gated mandates route) (0.323666ms)
+✔ credentials type (1.621533ms)
+▶ check permission
+  ✔ sends the exact CheckIn shape with the API key header and parses a fresh allow (3.036877ms)
+  ✔ omits empty optional fields from the wire body (0.842915ms)
+  ✔ surfaces needs_human_approval as a normal outcome, with no token (0.795474ms)
+  ✔ surfaces a deny as a normal outcome (0.651067ms)
+  ✔ flags an idempotent replay honestly: no token re-delivered, never a fresh permission (0.688353ms)
+  ✔ fails closed on a FRESH allow with no decision token (2.09916ms)
+  ✔ rejects a non-canonical category before any HTTP call (0.998108ms)
+  ✔ rejects a zero or fractional amount before any HTTP call (1.076405ms)
+  ✔ rejects an idempotency key shorter than 8 characters before any HTTP call (0.530276ms)
+✔ check permission (11.811736ms)
+▶ claim decision token
+  ✔ posts an empty JSON body and returns the token byte-identical (0.628443ms)
+  ✔ surfaces every production refusal code intact in the node error (3.304058ms)
+✔ claim decision token (4.165792ms)
+▶ complete purchase
+  ✔ seals a completion with no evidence (1.140561ms)
+  ✔ sends the full closed evidence set, payment block included, over the wire (0.612149ms)
+  ✔ allows a rail label only with rail 'other', and requires it there (1.05963ms)
+  ✔ enforces the charged-amount/currency and rail-ref pairing rules before HTTP (1.719962ms)
+  ✔ generates a stable completion nonce from the execution ID when none is given (0.411738ms)
+✔ complete purchase (5.437891ms)
+▶ get receipt
+  ✔ looks up by preauthorization ID with a bodyless GET (0.90617ms)
+  ✔ looks up by receipt ID (0.45263ms)
+  ✔ requires exactly one of the two IDs, before any HTTP call (0.683356ms)
+  ✔ surfaces an unknown preauthorization as a 404 API error (0.536034ms)
+✔ get receipt (2.936476ms)
+▶ fail-closed behavior
+  ✔ a 401 is an error, never a permission (0.748874ms)
+  ✔ a timeout fails closed with no permission output (0.622684ms)
+  ✔ a network failure fails closed (0.63359ms)
+  ✔ a non-JSON 2xx body fails closed as malformed (0.451387ms)
+  ✔ a non-JSON error body still surfaces its text as the detail (0.556165ms)
+  ✔ a missing API key in the credential fails before any HTTP call (0.50619ms)
+  ✔ continueOnFail converts a failure into an error item instead of throwing (0.327662ms)
+  ✔ honors a custom base URL from the credential, trailing slash included (0.2536ms)
+✔ fail-closed behavior (4.639522ms)
+▶ the full spend loop
+  ✔ check -> claim -> complete passes the claimed token byte-identical and logs nothing (0.82641ms)
+✔ the full spend loop (0.968123ms)
+ℹ tests 34
+ℹ suites 8
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 806.452117

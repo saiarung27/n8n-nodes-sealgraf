@@ -1,0 +1,7 @@
+node: sealgraf | displayName: Sealgraf | version: 1 | usableAsTool: true
+credentials required: [{"name":"sealgrafApi","required":true}]
+operations: checkPermission, claimDecisionToken, completePurchase, getReceipt
+credential: sealgrafApi | fields: baseUrl, apiKey
+authenticate: {"type":"generic","properties":{"headers":{"X-API-Key":"={{$credentials.apiKey}}"}}}
+test request: {"baseURL":"={{$credentials.baseUrl}}","url":"/v1/receipts","method":"GET","qs":{"limit":1}}
+execute is function: true

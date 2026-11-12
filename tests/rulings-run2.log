@@ -1,0 +1,74 @@
+
+> n8n-nodes-sealgraf@0.1.0 test
+> npm run build && node --test tests/sealgraf.test.js
+
+
+> n8n-nodes-sealgraf@0.1.0 build
+> n8n-node build
+
+┌   n8n-node build  v0.56.2
+[?25l│
+◒  Building TypeScript files[999D[J◐  Building TypeScript files[999D[J◓  Building TypeScript files[999D[J◑  Building TypeScript files[999D[J◒  Building TypeScript files[999D[J◐  Building TypeScript files[999D[J◓  Building TypeScript files[999D[J◑  Building TypeScript files[999D[J◒  Building TypeScript files.[999D[J◐  Building TypeScript files.[999D[J◓  Building TypeScript files.[999D[J◑  Building TypeScript files.[999D[J◒  Building TypeScript files.[999D[J◐  Building TypeScript files.[999D[J◓  Building TypeScript files.[999D[J◑  Building TypeScript files.[999D[J◒  Building TypeScript files..[999D[J◐  Building TypeScript files..[999D[J◓  Building TypeScript files..[999D[J◑  Building TypeScript files..[999D[J◒  Building TypeScript files..[999D[J◐  Building TypeScript files..[999D[J◓  Building TypeScript files..[999D[J◑  Building TypeScript files..[999D[J◒  Building TypeScript files...[999D[J◐  Building TypeScript files...[999D[J◓  Building TypeScript files...[999D[J◑  Building TypeScript files...[999D[J◒  Building TypeScript files...[999D[J◐  Building TypeScript files...[999D[J◓  Building TypeScript files...[999D[J◑  Building TypeScript files...[999D[J◒  Building TypeScript files...[999D[J◐  Building TypeScript files[999D[J◓  Building TypeScript files[999D[J◑  Building TypeScript files[999D[J◒  Building TypeScript files[999D[J◐  Building TypeScript files[999D[J◓  Building TypeScript files[999D[J◑  Building TypeScript files[999D[J◒  Building TypeScript files[999D[J◐  Building TypeScript files.[999D[J◓  Building TypeScript files.[999D[J◑  Building TypeScript files.[999D[J◒  Building TypeScript files.[999D[J◐  Building TypeScript files.[999D[J◓  Building TypeScript files.[999D[J◑  Building TypeScript files.[999D[J◒  Building TypeScript files.[999D[J◐  Building TypeScript files..[999D[J◓  Building TypeScript files..[999D[J◑  Building TypeScript files..[999D[J◒  Building TypeScript files..[999D[J◐  Building TypeScript files..[999D[J◓  Building TypeScript files..[999D[J◇  TypeScript build successful
+[?25h[?25l│
+◇  Copied static files
+[?25h│
+└  ✓ Build successful
+
+▶ node description
+  ✔ exposes one Sealgraf node with the sealgrafApi credential (2.649085ms)
+  ✔ offers exactly the canonical 14 categories, in canonical order (0.449625ms)
+✔ node description (4.865301ms)
+▶ credentials type
+  ✔ sends the key as X-API-Key via generic authenticate (0.456625ms)
+  ✔ defaults the base URL to https://sealgraf.com and masks the key (0.250857ms)
+  ✔ tests credentials with GET /v1/receipts?limit=1 (not the admin-gated mandates route) (0.196065ms)
+✔ credentials type (1.261263ms)
+▶ check permission
+  ✔ sends the exact CheckIn shape with the API key header and parses a fresh allow (2.436777ms)
+  ✔ omits empty optional fields from the wire body (0.710536ms)
+  ✔ surfaces needs_human_approval as a normal outcome, with no token (0.690697ms)
+  ✔ surfaces a deny as a normal outcome (0.659239ms)
+  ✔ flags an idempotent replay honestly: no token re-delivered, never a fresh permission (0.577497ms)
+  ✔ fails closed on a FRESH allow with no decision token (1.710166ms)
+  ✔ rejects a non-canonical category before any HTTP call (0.728163ms)
+  ✔ rejects a zero or fractional amount before any HTTP call (0.9928ms)
+  ✔ rejects an idempotency key shorter than 8 characters before any HTTP call (0.407702ms)
+✔ check permission (9.766647ms)
+▶ claim decision token
+  ✔ posts an empty JSON body and returns the token byte-identical (0.49359ms)
+  ✔ surfaces every production refusal code intact in the node error (2.477347ms)
+✔ claim decision token (3.235696ms)
+▶ complete purchase
+  ✔ seals a completion with no evidence (2.890638ms)
+  ✔ sends the full closed evidence set, payment block included, over the wire (0.465648ms)
+  ✔ allows a rail label only with rail 'other', and requires it there (1.50639ms)
+  ✔ enforces the charged-amount/currency and rail-ref pairing rules before HTTP (1.184477ms)
+  ✔ generates a stable completion nonce from the execution ID when none is given (0.247281ms)
+✔ complete purchase (6.630601ms)
+▶ get receipt
+  ✔ looks up by preauthorization ID with a bodyless GET (0.652369ms)
+  ✔ looks up by receipt ID (0.276735ms)
+  ✔ requires exactly one of the two IDs, before any HTTP call (0.472939ms)
+  ✔ surfaces an unknown preauthorization as a 404 API error (0.370215ms)
+✔ get receipt (2.028604ms)
+▶ fail-closed behavior
+  ✔ a 401 is an error, never a permission (0.493872ms)
+  ✔ a timeout fails closed with no permission output (0.418999ms)
+  ✔ a network failure fails closed (0.414692ms)
+  ✔ a non-JSON 2xx body fails closed as malformed (0.343024ms)
+  ✔ a non-JSON error body still surfaces its text as the detail (0.3671ms)
+  ✔ a missing API key in the credential fails before any HTTP call (0.258869ms)
+  ✔ continueOnFail converts a failure into an error item instead of throwing (0.196415ms)
+  ✔ honors a custom base URL from the credential, trailing slash included (0.137566ms)
+✔ fail-closed behavior (2.986252ms)
+▶ the full spend loop
+  ✔ check -> claim -> complete passes the claimed token byte-identical and logs nothing (0.575534ms)
+✔ the full spend loop (0.660321ms)
+ℹ tests 34
+ℹ suites 8
+ℹ pass 34
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1102.056693

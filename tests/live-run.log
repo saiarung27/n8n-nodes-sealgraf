@@ -1,0 +1,27 @@
+=== ATTEMPT 1 — 2026-11-11T20:32:33.811Z ===
+backend: https://see-app-uat.onrender.com (throwaway gate-1 test tenant)
+driver: dist/nodes/Sealgraf/Sealgraf.node.js execute() + real HTTPS helper
+[PASS] credential pre-flight: GET /v1/receipts?limit=1 -> 200
+loop A check: outcome=allow preauth=pa_a97be03f8f0849738d9369db6735bbb3 tokenLen=43
+[PASS] loop A check: fresh allow with token
+loop A complete: sealed receipt=rcpt_d3b99b2014244998b950aad981c90de7 entry_seq=41
+[PASS] loop A complete: receipt sealed, token byte-identical check->complete
+[PASS] loop A getReceipt: state completed
+loop A wire: POST /v1/preauthorize -> 201 (apiKeyHeader=true) | POST /v1/preauthorize/pa_a97be03f8f0849738d9369db6735bbb3/complete -> 200 (apiKeyHeader=true) | GET /v1/preauthorize/pa_a97be03f8f0849738d9369db6735bbb3 -> 200 (apiKeyHeader=true)
+loop B check: outcome=needs_human_approval preauth=pa_3479a70e7a7b4b8d9eec6e48a12d4379
+[PASS] loop B check: needs_human_approval, no token
+loop B claim (pre-approval): refused httpCode=409 [code: not_approved_yet]
+[PASS] loop B claim refused with not_approved_yet before approval
+loop B owner approval: pending_approval -> authorized (approve HTTP 200)
+[PASS] loop B owner approval via owner-session REST
+loop B claim (post-approval): token delivered, tokenLen=43
+[PASS] loop B claim succeeded after approval
+loop B complete: sealed receipt=rcpt_47904a72ddcb4cdb886c957be81180f9 entry_seq=44
+[PASS] loop B complete: receipt sealed, token byte-identical claim->complete
+[PASS] loop B getReceipt: state completed
+loop B wire: POST /v1/preauthorize -> 201 (apiKeyHeader=true) | POST /v1/preauthorize/pa_3479a70e7a7b4b8d9eec6e48a12d4379/decision-token -> 409 (apiKeyHeader=true) | POST /v1/preauthorize/pa_3479a70e7a7b4b8d9eec6e48a12d4379/decision-token -> 200 (apiKeyHeader=true) | POST /v1/preauthorize/pa_3479a70e7a7b4b8d9eec6e48a12d4379/complete -> 200 (apiKeyHeader=true) | GET /v1/preauthorize/pa_3479a70e7a7b4b8d9eec6e48a12d4379 -> 200 (apiKeyHeader=true)
+confirm loop A: preauth state=completed was_allowed=false | receipt entry_seq=41 amount_minor=300 currency=USD
+[PASS] server-side confirmation loop A
+confirm loop B: preauth state=completed was_allowed=true | receipt entry_seq=44 amount_minor=2500 currency=USD
+[PASS] server-side confirmation loop B
+RESULT: PASS
