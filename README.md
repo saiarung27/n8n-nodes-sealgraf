@@ -33,10 +33,10 @@ One node, four operations. Amounts are always in the currency's **minor units** 
 | --- | --- |
 | **Check Permission** | Ask Sealgraf whether a purchase may proceed, before any money moves. Returns `allow`, `deny`, or `needs_human_approval`. An immediate `allow` includes the single-use `decision_token`. |
 | **Claim Decision Token** | After the owner approves a check that returned `needs_human_approval`, claim the single-use decision token minted by that approval. |
-| **Complete Purchase** | After the purchase has actually happened, report it and seal the receipt. Requires the decision token; optional evidence (merchant reference, payment details) is sealed with it. |
+| **Complete Purchase** | After the purchase has actually happened, report it and seal the receipt. Requires the decision token and (node version 1.1) the amount charged; optional evidence (merchant reference, payment details) is sealed with it. |
 | **Get Receipt** | Look up a preauthorization by its ID (reads `GET /v1/preauthorize/{id}` — its state, decision, and receipt ID) or a sealed receipt by its ID (reads `GET /v1/receipts/{id}`). Give exactly one of the two IDs. |
 
-Categories are a closed list, identical to the Sealgraf API: `groceries`, `household`, `dining`, `travel`, `software`, `office_supplies`, `shopping`, `transport`, `entertainment`, `health`, `supplies`, `materials`, `equipment`, `fuel`.
+Categories are a closed list, identical to the Sealgraf API: `groceries`, `household`, `dining`, `travel`, `software`, `office_supplies`, `shopping`, `transport`, `entertainment`, `health`, `supplies`, `materials`, `equipment`, `fuel`, `services`, `shipping`, `repairs`.
 
 ### Fail-closed behavior
 
@@ -70,7 +70,7 @@ Requires n8n with community-node support (n8n Nodes API version 1). The package 
    - `needs_human_approval` → pause the workflow here (for example a **Wait** node resumed by your approval step). The owner approves in Sealgraf; nothing about the approval happens in n8n.
 3. **Sealgraf (Claim Decision Token)** — with the `preauth_id` from step 1. Only needed on the approval path; an immediate `allow` already carries its token.
 4. Buy the item, if you have not already.
-5. **Sealgraf (Complete Purchase)** — `preauth_id`, the decision token, and any completion evidence (merchant order reference, charged amount, payment rail). Output includes the sealed `receipt_id`.
+5. **Sealgraf (Complete Purchase)** — `preauth_id`, the decision token, the amount charged, and any completion evidence (merchant order reference, payment rail). Output includes the sealed `receipt_id`.
 6. **Sealgraf (Get Receipt)** — optionally, read the sealed receipt back by receipt ID or preauthorization ID.
 
 ### Example: check parameters for a $25 grocery order
@@ -106,6 +106,10 @@ Decision tokens are single-use and expire; pass them straight from the producing
 * [Sealgraf](https://sealgraf.com)
 
 ## Version history
+
+### 0.1.3
+
+Node version 1.1 (default for new nodes): Complete Purchase requires the amount charged. Existing workflows stay on version 1, unchanged. Adds the Services, Shipping and Repairs purchase kinds. See CHANGELOG.md.
 
 ### 0.1.0
 

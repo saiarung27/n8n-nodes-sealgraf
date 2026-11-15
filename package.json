@@ -1,6 +1,6 @@
 {
     "name": "n8n-nodes-sealgraf",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "description": "Sealgraf node for n8n: check spending permission before an agent buys, claim owner approvals, and seal verifiable receipts.",
     "license": "MIT",
     "homepage": "https://sealgraf.com",

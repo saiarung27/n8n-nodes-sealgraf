@@ -81,7 +81,7 @@ function receiptBody(overrides = {}) {
  * Build a fake IExecuteFunctions. `responder(call)` returns
  * { statusCode, body } or throws (transport failure).
  */
-function makeContext({ params = {}, credentials = CREDS, responder, continueOnFail = false }) {
+function makeContext({ params = {}, credentials = CREDS, responder, continueOnFail = false, typeVersion = 1 }) {
 	const calls = [];
 	const ctx = {
 		getInputData: () => [{ json: {} }],
@@ -91,7 +91,7 @@ function makeContext({ params = {}, credentials = CREDS, responder, continueOnFa
 		getNode: () => ({
 			name: 'Sealgraf',
 			type: 'n8n-nodes-sealgraf.sealgraf',
-			typeVersion: 1,
+			typeVersion,
 			position: [0, 0],
 			parameters: {},
 		}),
@@ -133,7 +133,9 @@ describe('node description', () => {
 		);
 	});
 
-	it('offers exactly the canonical 14 categories, in canonical order', () => {
+	// AMENDED 2026-11-15 (0.1.3): production grew to 17 kinds with the
+	// business purchase kinds (services, shipping, repairs).
+	it('offers exactly the canonical 17 categories, in canonical order', () => {
 		const d = new Sealgraf().description;
 		const cat = d.properties.find((p) => p.name === 'category');
 		assert.deepEqual(
@@ -145,7 +147,7 @@ describe('node description', () => {
 			[
 				'groceries', 'household', 'dining', 'travel', 'software', 'office_supplies',
 				'shopping', 'transport', 'entertainment', 'health', 'supplies', 'materials',
-				'equipment', 'fuel',
+				'equipment', 'fuel', 'services', 'shipping', 'repairs',
 			],
 		);
 	});
@@ -345,6 +347,54 @@ describe('claim decision token', () => {
 				return true;
 			});
 		}
+	});
+});
+
+describe('complete purchase, node version 1.1', () => {
+	const params = {
+		operation: 'completePurchase',
+		preauthId: 'pa_0001',
+		decisionToken: TOKEN_2,
+		completionNonce: 'nonce-abc-1',
+		evidence: { note: 'Delivered' },
+	};
+	const sealed = okJson({
+		receipt_id: 'rcpt_0001', preauth_id: 'pa_0001', entry_seq: 42,
+		amount_minor: 2500, currency: 'USD', mandate_id: 'mnd_0001',
+		created_at: '2026-11-11T19:05:00Z',
+	});
+
+	it('is the default version and shows Amount Charged only from 1.1', () => {
+		const d = new Sealgraf().description;
+		assert.deepEqual(d.version, [1, 1.1]);
+		assert.equal(d.defaultVersion, 1.1);
+		const field = d.properties.find((p) => p.name === 'amountChargedMinor');
+		assert.equal(field.required, true);
+		assert.deepEqual(field.displayOptions.show['@version'], [{ _cnd: { gte: 1.1 } }]);
+	});
+
+	it('sends the amount charged from its own field', async () => {
+		const { ctx, calls } = makeContext({
+			params: { ...params, amountChargedMinor: 2499 }, responder: sealed, typeVersion: 1.1,
+		});
+		await run(ctx);
+		assert.deepEqual(calls[0].body.evidence, { completed_amount_minor: 2499, note: 'Delivered' });
+	});
+
+	it('refuses a missing or zero amount before any HTTP call', async () => {
+		for (const amount of [undefined, 0, -5]) {
+			const p = { ...params };
+			if (amount !== undefined) p.amountChargedMinor = amount;
+			const { ctx, calls } = makeContext({ params: p, responder: sealed, typeVersion: 1.1 });
+			await assert.rejects(run(ctx), /amount_charged_minor/);
+			assert.equal(calls.length, 0);
+		}
+	});
+
+	it('version 1 workflows keep the optional evidence amount', async () => {
+		const { ctx, calls } = makeContext({ params, responder: sealed, typeVersion: 1 });
+		await run(ctx);
+		assert.deepEqual(calls[0].body.evidence, { note: 'Delivered' });
 	});
 });
 

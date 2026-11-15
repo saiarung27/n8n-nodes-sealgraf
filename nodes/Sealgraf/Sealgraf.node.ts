@@ -48,7 +48,11 @@ export class Sealgraf implements INodeType {
 		name: 'sealgraf',
 		icon: { light: 'file:sealgraf.svg', dark: 'file:sealgraf.svg' },
 		group: ['output'],
-		version: 1,
+		// 1.1: the amount charged is a required field on Complete Purchase.
+		// Version 1 keeps it optional inside Completion Evidence, so
+		// existing workflows behave exactly as before.
+		version: [1, 1.1],
+		defaultVersion: 1.1,
 		subtitle: '={{$parameter["operation"]}}',
 		description:
 			'Check spending permission before buying, claim owner approvals, and seal verifiable receipts',
@@ -262,6 +266,24 @@ export class Sealgraf implements INodeType {
 					'Idempotency nonce for this completion. Leave empty to generate one from the workflow execution ID and the preauthorization ID.',
 			},
 			{
+				displayName: 'Amount Charged (Minor Units)',
+				name: 'amountChargedMinor',
+				type: 'number',
+				required: true,
+				default: 0,
+				typeOptions: {
+					minValue: 1,
+				},
+				displayOptions: {
+					show: {
+						operation: ['completePurchase'],
+						'@version': [{ _cnd: { gte: 1.1 } }],
+					},
+				},
+				description:
+					'What was actually paid, in minor units (cents): 2499 for $24.99. It can be less than the checked amount, never more.',
+			},
+			{
 				displayName: 'Completion Evidence',
 				name: 'evidence',
 				type: 'collection',
@@ -280,7 +302,8 @@ export class Sealgraf implements INodeType {
 						name: 'completedAmountMinor',
 						type: 'number',
 						default: 0,
-						description: 'The amount actually completed, in minor units',
+						description:
+							'The amount actually completed, in minor units. From node version 1.1 this is the required Amount Charged field instead.',
 					},
 					{
 						displayName: 'Counterparty Receipt Ref',
@@ -456,7 +479,7 @@ export class Sealgraf implements INodeType {
 					...(request.qs !== undefined ? { qs: request.qs as IDataObject } : {}),
 					headers: {
 						'Content-Type': 'application/json',
-						'User-Agent': 'n8n-nodes-sealgraf/0.1.2',
+						'User-Agent': 'n8n-nodes-sealgraf/0.1.3',
 					},
 					timeout: 20000,
 					returnFullResponse: true,
@@ -608,9 +631,19 @@ async function runCompletePurchase(
 		completionNonce = `n8n-${ctx.getExecutionId()}-${preauthId}`;
 	}
 	// Evidence rules are enforced here, before any HTTP call.
-	const evidence = buildEvidence(
-		ctx.getNodeParameter('evidence', itemIndex, {}) as Record<string, unknown>,
-	);
+	const evidenceParams = {
+		...(ctx.getNodeParameter('evidence', itemIndex, {}) as Record<string, unknown>),
+	};
+	if (ctx.getNode().typeVersion >= 1.1) {
+		// 1.1: the amount charged is required and comes from its own
+		// field; requireAmountMinor refuses a missing or non-positive
+		// value before any HTTP call.
+		evidenceParams.completedAmountMinor = requireAmountMinor(
+			ctx.getNodeParameter('amountChargedMinor', itemIndex, undefined),
+			'amount_charged_minor',
+		);
+	}
+	const evidence = buildEvidence(evidenceParams);
 	const data = await client.completePurchase(preauthId, {
 		decisionToken,
 		completionNonce,

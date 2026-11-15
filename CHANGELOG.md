@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.3 — 2026-11-15
+
+- Node version 1.1 (the default for new nodes): Complete Purchase has a
+  required **Amount Charged (Minor Units)** field, refused before any
+  HTTP call when missing or not positive. Existing workflows stay on
+  node version 1 and behave exactly as before (the amount stays an
+  optional Completion Evidence field there).
+- Three new purchase kinds, matching production: Services, Shipping,
+  Repairs (business purchases on a purchase order).
+- User-Agent version literal follows the package version.
+
 ## 0.1.2 — 2026-11-12
 
 - Verification fix: the node's transport now throws n8n-native

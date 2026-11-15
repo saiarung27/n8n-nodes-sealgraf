@@ -48,6 +48,11 @@ export const CATEGORIES = [
 	'materials',
 	'equipment',
 	'fuel',
+	// Business purchases on a purchase order (production DECISIONS #149):
+	// new ids, nothing renamed.
+	'services',
+	'shipping',
+	'repairs',
 ] as const;
 
 export const CATEGORY_OPTIONS: Array<{ name: string; value: string }> = [
@@ -65,6 +70,9 @@ export const CATEGORY_OPTIONS: Array<{ name: string; value: string }> = [
 	{ name: 'Materials', value: 'materials' },
 	{ name: 'Equipment', value: 'equipment' },
 	{ name: 'Fuel', value: 'fuel' },
+	{ name: 'Services', value: 'services' },
+	{ name: 'Shipping', value: 'shipping' },
+	{ name: 'Repairs', value: 'repairs' },
 ];
 
 // Decision outcomes (production: see/models.py DecisionOutcome).
